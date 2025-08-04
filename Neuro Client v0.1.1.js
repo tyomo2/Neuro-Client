@@ -5,6 +5,7 @@
 // @version     0.1.0
 // @author      Developed by skidmus, wang, simple/5eqnMVZDg1cezjZh, chatGPT, Arthur, ENTITY, and Tomo.
 // @description https://discord.gg/VN2kjB78
+//updateURL Ignore my spelling there 😂
 // ==/UserScript==
 //
 // ALWAYS USE ALTS
@@ -3660,6 +3661,7 @@ observer.observe(document.body, {
   childList: true,
   subtree: true
 });
+
 
 
 
