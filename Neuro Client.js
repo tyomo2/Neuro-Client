@@ -5,7 +5,6 @@
 // @version     0.1.0
 // @author      Developed by skidmus, wang, simple/5eqnMVZDg1cezjZh, chatGPT, Arthur, ENTITY, and Tomo.
 // @description https://discord.gg/VN2kjB78
-// @updateURL https://raw.githubusercontent.com/tyomo2/Neuro-Client/refs/heads/main/Neuro%20Client.js
 // ==/UserScript==
 //
 // ALWAYS USE ALTS
@@ -13,8 +12,6 @@
 //(() => {
 
 //__START__SETTINGS______________________________________________
-
-let version = "0.1.0"
 
 const defaultColor = "#FB8E5F" //-------------------ACCENT COLOR
 
@@ -3664,7 +3661,6 @@ observer.observe(document.body, {
 
 
 
-
 //})();
 // ---- 古いメニュー・watermark等の強制削除 ----
 for (const id of [
@@ -3674,405 +3670,438 @@ for (const id of [
   if (id && document.getElementById(id)) document.getElementById(id).remove();
 for (const x of document.querySelectorAll('.arraylist-box, .watermark'))
   x.remove();
+//ここからメインのスクリプト
 (function () {
-    'use strict';
+'use strict';
 
-    // ===== カテゴリー分け =====
-    const categories = {
-        Combat: [
-            { name: 'Killaura', fn: toggleKillAura, isOn: () => killAuraEnabled },
-            { name: 'TriggerBot', fn: toggleTriggerBot, isOn: () => triggerBotEnabled },
-            { name: 'HitBoxes', fn: toggleHitBoxes, isOn: () => hitBoxEnabled },
-            { name: 'Enemy Health Bar', fn: toggleEnemyHealthGui, isOn: () => enemyHealthGuiEnabled }
-        ],
-        Movement: [
-            { name: 'BHOP', fn: toggleBHOP, isOn: () => bhopEnabled },
-            { name: 'BHOP Knife', fn: toggleBhopKnife, isOn: () => bhopKnifeEnabled },
-            { name: 'Blink', fn: toggleBlinkWrapper, isOn: () => blinkState?.enabled },
-            { name: 'WallJump', fn: toggleWallJumpScript, isOn: () => wallJumpRunning },
-            { name: 'WaterJump', fn: toggleLockPlayerWaterState, isOn: () => waterJumpingEnabled }
-        ],
-        Visual: [
-            { name: 'arraylist', fn: null, isOn: null, ui: true },
-            { name: 'watermark', fn: null, isOn: null, ui: true },
-            { name: 'ESP', fn: toggleESP, isOn: () => espEnabled },
-            { name: 'OreESP', fn: toggleOreESP, isOn: () => oreESPEnabled },
-            { name: 'Chest ESP', fn: toggleChestESP, isOn: () => chestESPEnabled },
-            { name: 'NameTags', fn: toggleNameTags, isOn: () => nameTagsEnabled },
-            { name: 'BIGHEADS', fn: toggleBigHeads, isOn: () => bigHeadsEnabled },
-            { name: 'Wireframe', fn: toggleWireframe, isOn: () => wireFramesBool }
-        ],
-        Misc: [
-            {
-                name: 'New account',
-                fn: function () {
-                    document.cookie.split(";").forEach(function (c) {
-                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/");
-                    });
-                    location.reload();
-                },
-                isOn: null
-            },
-            { name: 'Night', fn: toggleSkybox, isOn: () => isSkyboxHidden },
-            { name: 'Pickup Reach', fn: togglePickupReach, isOn: () => pickupReachEnabled },
-            { name: 'Scaffold', fn: toggleScaffold, isOn: () => scaffoldEnabled }
-        ]
-    };
+// ===== カテゴリー分け =====
+const categories = {
+Combat: [
+{ name: 'Killaura', fn: toggleKillAura, isOn: () => killAuraEnabled },
+{ name: 'TriggerBot', fn: toggleTriggerBot, isOn: () => triggerBotEnabled },
+{ name: 'HitBoxes', fn: toggleHitBoxes, isOn: () => hitBoxEnabled },
+{ name: 'Enemy Health Bar', fn: toggleEnemyHealthGui, isOn: () => enemyHealthGuiEnabled }
+],
+Movement: [
+{ name: 'BHOP', fn: toggleBHOP, isOn: () => bhopEnabled },
+{ name: 'BHOP Knife', fn: toggleBhopKnife, isOn: () => bhopKnifeEnabled },
+{ name: 'Blink', fn: toggleBlinkWrapper, isOn: () => blinkState?.enabled },
+{ name: 'WallJump', fn: toggleWallJumpScript, isOn: () => wallJumpRunning },
+{ name: 'WaterJump', fn: toggleLockPlayerWaterState, isOn: () => waterJumpingEnabled }
+],
+Visual: [
+{ name: 'arraylist', fn: null, isOn: null, ui: true },
+{ name: 'watermark', fn: null, isOn: null, ui: true },
+{ name: 'ESP', fn: toggleESP, isOn: () => espEnabled },
+{ name: 'OreESP', fn: toggleOreESP, isOn: () => oreESPEnabled },
+{ name: 'Chest ESP', fn: toggleChestESP, isOn: () => chestESPEnabled },
+{ name: 'NameTags', fn: toggleNameTags, isOn: () => nameTagsEnabled },
+{ name: 'BIGHEADS', fn: toggleBigHeads, isOn: () => bigHeadsEnabled },
+{ name: 'Wireframe', fn: toggleWireframe, isOn: () => wireFramesBool }
+],
+Misc: [
+{ name: 'New account',
+    fn: function() {
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/");
+        });
+        // localStorage.clear(); sessionStorage.clear();
+        location.reload();
+    },
+    isOn: null
+},
+{ name: 'Night', fn: toggleSkybox, isOn: () => isSkyboxHidden },
+{ name: 'Pickup Reach', fn: togglePickupReach, isOn: () => pickupReachEnabled },
+{ name: 'Scaffold', fn: toggleScaffold, isOn: () => scaffoldEnabled }
+]
+};
 
-    // ---- キーバインド保存 ----
-    const defaultKeybinds = {};
-    for (const arr of Object.values(categories)) for (const mod of arr) defaultKeybinds[mod.name] = null;
-    let keybinds = JSON.parse(localStorage.getItem('modKeybinds') || '{}');
-    keybinds = { ...defaultKeybinds, ...keybinds };
+let arraylistOn = true;
+let watermarkOn = true;
 
-    // ---- UI専用オンオフ ----
-    let arraylistOn = true;
-    let watermarkOn = true;
+// ---- Style ----
+const injectStyle = () => {
+  const style = document.createElement('style');
+  style.textContent = `
+.mod-menu {
+display: flex !important;
+flex-direction: row;
+flex-wrap: nowrap;
+justify-content: center;
+align-items: flex-start;
+position: fixed;
+top: 10%;
+left: 50%;
+transform: translateX(-50%);
+background:none;
+border-radius: 10px;
+gap: 8px;
+padding: 8px;
+z-index: 9999;
+max-width: 95vw;
+box-sizing: border-box;
+transition: opacity 0.3s ease;
+}
+.mod-menu.hidden {
+opacity: 0;
+pointer-events: none;
+}
+.mod-category {
+flex: 2;
+width: 200px;
+background-color: black;
+border-radius: 8px;
+overflow: hidden;
+box-shadow: 0 0 6px rgba(0,0,0,0.3);
+display: flex;
+flex-direction: column;
+margin-right: 8px;
+}
+.mod-tab {
+background-color: black;
+color: white;
+font-weight: bold;
+padding: 10px 20px;
+font-size: 18px;
+text-align: center;
+}
+.mod-submenu {
+display: flex;
+flex-direction: column;
+}
+.mod-submenu-item {
+padding: 8px 12px;
+font-size: 16px;
+font-weight: 500;
+cursor: pointer;
+background-color: black;
+color: white;
+border: none;
+margin: 0;
+line-height: 1.5em;
+user-select: none;
+position: relative;
+}
+.mod-submenu-item.on {
+background-color: #5fd2ff;
+color: white;
+}
+.mod-submenu-item.off {
+background-color: black;
+color: white;
+}
+.mod-submenu-item:hover {
+filter: brightness(1.2);
+}
+.arraylist-box {
+position: fixed;
+top: 10px;
+right: 10px;
+background: rgba(0,0,0,0.7);
+color: #5fd2ff;
+padding: 5px 10px;
+font-size: 14px;
+font-weight: bold;
+z-index: 9999;
+text-align: right;
+border-left: 2px solid #5fd2ff;
+display: none;
+}
+.menu-toggle-button {
+position: fixed;
+top: 10px;
+left: 50%;
+transform: translateX(-50%);
+z-index: 10000;
+background: rgba(23,28,36,0.7);
+color: white;
+padding: 6px 16px;
+font-size: 16px;
+font-weight: bold;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+user-select: none;
+backdrop-filter: blur(3px);
+}
+.keybind-dropdown-btn {
+position: absolute;
+right: 10px;
+top: 8px;
+background: none;
+color: white;
+border: none;
+font-size: 16px;
+cursor: pointer;
+z-index: 2;
+padding: 0;
+margin: 0;
+line-height: 1;
+}
+.keybind-dropdown {
+display: none;
+position: fixed;
+background: #1c2532;
+color: #ffffff;
+border-radius: 5px;
+box-shadow: 0 2px 12px 3px rgba(0,0,0,0.7);
+padding: 10px 18px 10px 10px;
+min-width: 170px;
+z-index: 2147483647 !important; /* 最前面 */
+}
+.keybind-dropdown input {
+width: 2em;
+margin-right: 6px;
+text-align: center;
+font-size: 15px;
+}
+.keybind-note { font-size: 12px; color: #9eddfa; margin-top:2px;}
+  `;
+  document.head.appendChild(style);
+};
 
-    // ---- Style ----
-    const injectStyle = () => {
-        const style = document.createElement('style');
-        style.textContent = `
-            .mod-menu {
-                display: flex !important;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: center;
-                align-items: flex-start;
-                position: fixed;
-                top: 10%;
-                left: 50%;
-                transform: translateX(-50%);
-                background:none;
-                border-radius: 10px;
-                gap: 8px;
-                padding: 8px;
-                z-index: 9999;
-                max-width: 95vw;
-                box-sizing: border-box;
-                transition: opacity 0.3s ease;
-            }
-            .mod-menu.hidden { opacity: 0; pointer-events: none; }
-            .mod-category { flex: 2; width: 200px; background-color: black; border-radius: 8px; overflow: hidden; box-shadow: 0 0 6px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
-            .mod-tab { background-color: black; color: white; font-weight: bold; padding: 10px 20px; font-size: 18px; text-align: center; }
-            .mod-submenu { display: flex; flex-direction: column; }
-            .mod-submenu-item { padding: 8px 12px; font-size: 16px; font-weight: 500; cursor: pointer; background-color: black; color: white; border: none; margin: 0; line-height: 1.5em; user-select: none; position: relative; }
-            .mod-submenu-item.on { background-color: #5fd2ff; color: white; }
-            .mod-submenu-item.off { background-color: black; color: white; }
-            .mod-submenu-item:hover { filter: brightness(1.18); }
-            .key-edit-link { color: #76defe; cursor: pointer; font-size: 13px; margin-left: 7px; text-decoration: underline; font-weight: 400; background: none; border: none; }
-            .keybind-dropdown-slim {
-                position: absolute;
-                left: 4px;
-                top: 32px;
-                background: rgba(25,26,32,0.97);
-                color: #fff;
-                border: 1px solid #5fd2ff;
-                border-radius: 7px;
-                padding: 9px 14px 7px 14px;
-                font-size: 14px;
-                min-width: 152px;
-                box-shadow: 0 2.5px 16px #2ccfff52;
-                z-index: 10002;
-                white-space: nowrap;
-                animation: popfadein .18s;
-            }
-            @keyframes popfadein { from { opacity: 0; transform: scale(.9); } to { opacity:1; transform: scale(1);} }
-            .keybind-dropdown-slim input {
-                width: 64px;
-                text-align: center;
-                background: #181d22;
-                color: #1aecff;
-                border: 1px solid #555;
-                padding: 3.5px 3px;
-                border-radius: 4px;
-                font-size:15px;
-            }
-            .keybind-dropdown-slim button { margin-left: 4px; background: none; color: #4fe9fd; border: none; cursor: pointer; }
-            .keybind-dropdown-slim .kb-warn { color: #ff5a61; font-size: 12px; margin-top: 4px; display:none;}
-            .arraylist-box {
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                background: rgba(0,0,0,0.7);
-                color: #5fd2ff;
-                padding: 5px 10px;
-                font-size: 14px;
-                font-weight: bold;
-                z-index: 9999;
-                text-align: right;
-                border-left: 2px solid #5fd2ff;
-                display: none;
-            }
-            .menu-toggle-button {
-                position: fixed;
-                top: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 10000;
-                background: rgba(23,28,36,0.7);
-                color: white;
-                padding: 6px 16px;
-                font-size: 16px;
-                font-weight: bold;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-                user-select: none;
-                backdrop-filter: blur(3px);
-            }
-        `;
-        document.head.appendChild(style);
-    };
-
-    // ---- ON/OFF状態を反映 ----
-    function updateUI() {
-        showFunnyScriptWatermark(watermarkOn);
-        const arraylist = document.querySelector('.arraylist-box');
-        const arrActive = [];
-        for (const catArr of Object.values(categories)) for (const mod of catArr) {
-            if (mod.ui) continue;
-            try { if (mod.isOn && mod.isOn()) arrActive.push(mod.name); } catch { }
-        }
-        if (watermarkOn && arraylistOn) arrActive.push("watermark");
-        if (arraylistOn && arrActive.length > 0) {
-            arraylist.innerHTML = '';
-            arrActive.sort((a, b) => b.length - a.length).forEach(name => {
-                const line = document.createElement('div');
-                line.textContent = name;
-                arraylist.appendChild(line);
-            });
-            arraylist.style.display = 'block';
-        } else {
-            arraylist.style.display = 'none';
-        }
-    }
-
-    function showFunnyScriptWatermark(show = true) {
-        let id = "funnyScript-watermark";
-        let wm = document.getElementById(id);
-        if (!wm && show) {
-            wm = document.createElement("div");
-            wm.id = id;
-            wm.textContent = "Neuro Client";
-            Object.assign(wm.style, {
-                position: "fixed",
-                top: "12px",
-                left: "12px",
-                color: "#5fd2ff",
-                fontWeight: "bold",
-                fontSize: "20px",
-                background: "none",
-                zIndex: 999998,
-                padding: "3px 14px",
-                userSelect: "none",
-                pointerEvents: "none"
-            });
-            document.body.appendChild(wm);
-        }
-        if (wm) wm.style.display = show ? "block" : "none";
-    }
-
-    function createMenu() {
-        injectStyle();
-        const menu = document.createElement('div');
-        menu.className = 'mod-menu hidden';
-
-        for (const [category, modArr] of Object.entries(categories)) {
-            const catBox = document.createElement('div');
-            catBox.className = 'mod-category';
-
-            const tab = document.createElement('div');
-            tab.className = 'mod-tab';
-            tab.textContent = category;
-
-            const submenu = document.createElement('div');
-            submenu.className = 'mod-submenu';
-
-            for (const mod of modArr) {
-                const item = document.createElement('div');
-                item.className = 'mod-submenu-item off';
-
-                // 機能名
-                item.textContent = mod.name;
-
-                // ---- 簡素なキーバインド編集リンク
-                if (!mod.ui && mod.fn) {
-                    const keyEdit = document.createElement('button');
-                    keyEdit.className = 'key-edit-link';
-                    keyEdit.textContent = `🔑`;
-                    keyEdit.title = 'キーバインド設定';
-                    keyEdit.type = 'button';
-                    keyEdit.onclick = ev => {
-                        ev.stopPropagation();
-                        showKeybindDropdown(item, mod);
-                    };
-                    item.appendChild(keyEdit);
-                }
-                if (mod.ui) {
-                    item.onclick = function () {
-                        if (mod.name === 'arraylist') arraylistOn = !arraylistOn;
-                        if (mod.name === 'watermark') watermarkOn = !watermarkOn;
-                        updateStyle(item, mod);
-                        updateUI();
-                    };
-                    updateStyle(item, mod);
-                } else if (mod.fn && typeof mod.fn === 'function') {
-                    item.onclick = function (e) {
-                        // 編集中は実行しない
-                        if (item.querySelector('.keybind-dropdown-slim')) return;
-                        try { mod.fn(); } catch (e) { }
-                        setTimeout(() => { updateStyle(item, mod); updateUI(); }, 80);
-                    };
-                    updateStyle(item, mod);
-                }
-                submenu.appendChild(item);
-            }
-            catBox.appendChild(tab);
-            catBox.appendChild(submenu);
-            menu.appendChild(catBox);
-        }
-        document.body.appendChild(menu);
-
-        // Arraylist
-        const arraylist = document.createElement('div');
-        arraylist.className = 'arraylist-box';
-        document.body.appendChild(arraylist);
-
-        // Toggleボタン
-        const toggleBtn = document.createElement('button');
-        toggleBtn.className = 'menu-toggle-button';
-        toggleBtn.textContent = '≡ Menu';
-        toggleBtn.onclick = toggleMenu;
-        document.body.appendChild(toggleBtn);
-
-        updateUI();
-    }
-
-    // ---- ON/OFFボタンの見た目
-    function updateStyle(item, mod) {
-        let isOn = false;
-        if (mod.ui) {
-            isOn = (mod.name === 'arraylist') ? arraylistOn : watermarkOn;
-        } else if (mod.isOn && typeof mod.isOn === 'function') {
-            try { isOn = !!mod.isOn(); } catch { isOn = false; }
-        }
-        item.classList.toggle('on', isOn);
-        item.classList.toggle('off', !isOn);
-    }
-
-    // ---- シンプルなドロップダウン（キーバインド編集UI）
-    function showKeybindDropdown(parentItem, mod) {
-        // ほかのを消す
-        const existed = parentItem.querySelector('.keybind-dropdown-slim');
-        document.querySelectorAll('.keybind-dropdown-slim').forEach(el => el.remove());
-        if (existed) return; // 2回目は閉じる
-
-        const dd = document.createElement('div');
-        dd.className = 'keybind-dropdown-slim';
-
-        const cbind = keybinds[mod.name];
-        dd.innerHTML = `
-            <div>Key: <span id="kbcur">${cbind ? cbind.toUpperCase() : '<none>'}</span>
-                <button id="kbunset">Unset</button>
-            </div>
-            <div style="margin-top:6px;">
-                割当: <input id="kbinput" type="text" readonly placeholder="キー押して登録" style="width:62px;" />
-            </div>
-            <div class="kb-warn" id="kbwarn"></div>
-        `;
-
-        parentItem.appendChild(dd);
-
-        // inputイベント
-        const input = dd.querySelector('#kbinput');
-        const warn = dd.querySelector('#kbwarn');
-        input.focus();
-        input.onkeydown = ev => {
-            ev.preventDefault();
-            const pressed = ev.key.toLowerCase();
-
-            // カーソル系/制御キー抑止
-            if (pressed.length > 1 && !/^f\d{1,2}|escape|insert|delete|home|end|arrow.+$/.test(pressed)) {
-                warn.textContent = "このキーは登録できません";
-                warn.style.display = 'block';
-                return;
-            }
-            // ほかで使われてる？
-            let conflict = null;
-            for (const [mname, k] of Object.entries(keybinds)) {
-                if (k === pressed && mname !== mod.name) { conflict = mname; break; }
-            }
-            if (conflict) {
-                warn.textContent = `すでに"${conflict}"で使用中`;
-                warn.style.display = 'block';
-                return;
-            }
-            // 登録
-            keybinds[mod.name] = pressed;
-            localStorage.setItem('modKeybinds', JSON.stringify(keybinds));
-            dd.querySelector('#kbcur').textContent = pressed.toUpperCase();
-            warn.textContent = '';
-            warn.style.display = 'none';
-            input.blur();
-        };
-        // Unset
-        dd.querySelector('#kbunset').onclick = () => {
-            keybinds[mod.name] = null;
-            localStorage.setItem('modKeybinds', JSON.stringify(keybinds));
-            dd.querySelector('#kbcur').textContent = "<none>";
-            warn.textContent = '';
-            warn.style.display = 'none';
-            input.value = "";
-        };
-        // 外クリックで消す
-        setTimeout(() => {
-            window.addEventListener('mousedown', closeDropdown, { once: true });
-        }, 160);
-        function closeDropdown(ev) {
-            if (!dd.contains(ev.target)) dd.remove();
-        }
-    }
-
-    // ---- メニュー開閉
-    let menuOpen = false;
-    function toggleMenu() {
-        const menu = document.querySelector('.mod-menu');
-        menuOpen = !menuOpen;
-        if (menuOpen) {
-            menu.classList.remove('hidden');
-            menu.style.display = 'flex';
-            requestAnimationFrame(() => { menu.style.opacity = '1'; });
-        } else {
-            menu.classList.add('hidden');
-            menu.style.opacity = '0';
-            setTimeout(() => { if (!menuOpen) menu.style.display = 'none'; }, 280);
-        }
-    }
-
-    // ---- グローバルキーバインド受付
-    document.addEventListener('keydown', e => {
-        if (e.key === 'openKey') {
-            toggleMenu();
-        }
-        // メニュー開の間は抑止
-        if (menuOpen) return;
-        // 各機能へ
-        for (const arr of Object.values(categories)) {
-            for (const mod of arr) {
-                if (!(mod.fn && keybinds[mod.name])) continue;
-                if (e.key.toLowerCase() === keybinds[mod.name]) {
-                    try { mod.fn(); } catch (e) { }
-                    setTimeout(updateUI, 60);
-                    e.preventDefault();
-                    return;
-                }
-            }
-        }
+// ---- ON/OFF状態を反映 ----
+function updateUI() {
+  showFunnyScriptWatermark(watermarkOn);
+  const arraylist = document.querySelector('.arraylist-box');
+  const arrActive = [];
+  for (const catArr of Object.values(categories)) for (const mod of catArr) {
+    if (mod.ui) continue;
+    try {
+      if (mod.isOn && mod.isOn()) arrActive.push(mod.name);
+    } catch {}
+  }
+  if (watermarkOn && arraylistOn) arrActive.push("watermark");
+  if (arraylistOn && arrActive.length > 0) {
+    arraylist.innerHTML = '';
+    arrActive.sort((a, b) => b.length - a.length).forEach(name => {
+      const line = document.createElement('div');
+      line.textContent = name;
+      arraylist.appendChild(line);
     });
+    arraylist.style.display = 'block';
+  } else {
+    arraylist.style.display = 'none';
+  }
+}
 
-    // ---- 初期化
-    createMenu();
+function showFunnyScriptWatermark(show = true) {
+  let id = "funnyScript-watermark";
+  let wm = document.getElementById(id);
+  if (!wm && show) {
+    wm = document.createElement("div");
+    wm.id = id;
+    wm.textContent = "Neuro Client";
+    Object.assign(wm.style, {
+        position: "fixed",
+        top: "12px",
+        left: "12px",
+        color: "#5fd2ff",
+        fontWeight: "bold",
+        fontSize: "20px",
+        background: "none",
+        zIndex: 999998,
+        padding: "3px 14px",
+        userSelect: "none",
+        pointerEvents: "none"
+    });
+    document.body.appendChild(wm);
+  }
+  if (wm) wm.style.display = show ? "block" : "none";
+}
+
+function createMenu() {
+  injectStyle();
+  const menu = document.createElement('div');
+  menu.className = 'mod-menu hidden';
+
+  let openedDropdown = null;
+
+  for (const [category, modArr] of Object.entries(categories)) {
+    const catBox = document.createElement('div');
+    catBox.className = 'mod-category';
+
+    const tab = document.createElement('div');
+    tab.className = 'mod-tab';
+    tab.textContent = category;
+
+    const submenu = document.createElement('div');
+    submenu.className = 'mod-submenu';
+
+    for (const mod of modArr) {
+      const item = document.createElement('div');
+      item.className = 'mod-submenu-item off';
+      item.textContent = mod.name;
+
+      // ▼ボタン追加
+      if (!mod.ui) {
+        const dropdownBtn = document.createElement('button');
+        dropdownBtn.className = 'keybind-dropdown-btn';
+        dropdownBtn.textContent = '▼';
+
+        const dropdownMenu = document.createElement('div');
+        dropdownMenu.className = 'keybind-dropdown';
+        dropdownMenu.innerHTML = `
+  <div>
+    <label>
+      キー割り当て: 
+      <input type="text" maxlength="1" style="width:2em; text-transform:uppercase;" />
+    </label>
+    <div class="keybind-note"></div>
+    <div class="keybind-help" style="font-size:11px;color:#aaa;margin-top:5px;">Enter to confirm, Esc to cancel.</div>
+  </div>
+        `;
+        const input = dropdownMenu.querySelector('input');
+        const note = dropdownMenu.querySelector('.keybind-note');
+        input.value = localStorage.getItem('modkeybind_' + mod.name) || '';
+        note.innerText = input.value ? `Currect Key: ${input.value.toUpperCase()}` : 'Not Set';
+
+        // 開閉と位置調整
+        dropdownBtn.onclick = (e) => {
+          e.stopPropagation();
+          // 他のを閉じる
+          if (openedDropdown && openedDropdown !== dropdownMenu) {
+            openedDropdown.style.display = 'none';
+            openedDropdown = null;
+          }
+          if (dropdownMenu.style.display === 'block') {
+            dropdownMenu.style.display = 'none';
+            openedDropdown = null;
+          } else {
+            // ボタンの絶対座標取得
+            const rect = item.getBoundingClientRect();
+            dropdownMenu.style.display = 'block';
+            dropdownMenu.style.left = rect.left + 'px';
+            dropdownMenu.style.top = (rect.bottom) + 'px';
+            openedDropdown = dropdownMenu;
+            input.focus();
+          }
+        };
+
+        // 外クリックで閉じる
+        document.addEventListener('mousedown', e => {
+          if (openedDropdown && !openedDropdown.contains(e.target) && !dropdownBtn.contains(e.target)) {
+            openedDropdown.style.display = 'none';
+            openedDropdown = null;
+          }
+        });
+
+        // Enter→設定, Esc→解除
+        input.addEventListener('keydown', evt => {
+          if (evt.key === 'Enter') {
+            const key = input.value.trim().toUpperCase();
+            if (!key.match(/^[A-Z0-9]$/)) {
+              note.innerText = 'A-Zまたは0-9一文字で入力';
+              return;
+            }
+            localStorage.setItem('modkeybind_' + mod.name, key);
+            note.innerText = `現在のキー: ${key}`;
+          }
+          if (evt.key === 'Escape') {
+            localStorage.removeItem('modkeybind_' + mod.name);
+            input.value = '';
+            note.innerText = '未設定';
+          }
+        });
+
+        document.body.appendChild(dropdownMenu);
+        item.appendChild(dropdownBtn);
+      }
+
+      if (mod.ui) {
+        item.onclick = () => {
+          if (mod.name === 'arraylist') arraylistOn = !arraylistOn;
+          if (mod.name === 'watermark') watermarkOn = !watermarkOn;
+          updateStyle(item, mod);
+          updateUI();
+        };
+        updateStyle(item, mod);
+      } else if (mod.fn && typeof mod.fn === 'function') {
+        item.onclick = (e) => {
+          if (
+            e.target.classList.contains('keybind-dropdown-btn') ||
+            (e.target.closest && e.target.closest('.keybind-dropdown'))
+          ) return;
+          try { mod.fn(); } catch (e) {}
+          setTimeout(() => {
+            updateStyle(item, mod);
+            updateUI();
+          }, 80);
+        };
+        updateStyle(item, mod);
+      }
+      submenu.appendChild(item);
+    }
+    catBox.appendChild(tab);
+    catBox.appendChild(submenu);
+    menu.appendChild(catBox);
+  }
+
+  document.body.appendChild(menu);
+
+  const arraylist = document.createElement('div');
+  arraylist.className = 'arraylist-box';
+  document.body.appendChild(arraylist);
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'menu-toggle-button';
+  toggleBtn.textContent = '≡ Menu';
+  toggleBtn.onclick = toggleMenu;
+  document.body.appendChild(toggleBtn);
+
+  updateUI();
+}
+
+function updateStyle(item, mod) {
+  let isOn = false;
+  if (mod.ui) {
+    isOn = (mod.name === 'arraylist') ? arraylistOn : watermarkOn;
+  } else if (mod.isOn && typeof mod.isOn === 'function') {
+    try { isOn = !!mod.isOn(); } catch { isOn = false; }
+  }
+  item.classList.toggle('on', isOn);
+  item.classList.toggle('off', !isOn);
+}
+
+let menuOpen = false;
+function toggleMenu() {
+  const menu = document.querySelector('.mod-menu');
+  menuOpen = !menuOpen;
+  if (menuOpen) {
+    menu.classList.remove('hidden');
+    menu.style.display = 'flex';
+    requestAnimationFrame(() => { menu.style.opacity = '1'; });
+  } else {
+    menu.classList.add('hidden');
+    menu.style.opacity = '0';
+    setTimeout(() => {
+      if (!menuOpen) menu.style.display = 'none';
+    }, 300);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'openKey') {
+    toggleMenu();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if(document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  for (const catArr of Object.values(categories)) for (const mod of catArr) {
+    if (!mod.fn || typeof mod.fn !== 'function') continue;
+    const bindKey = localStorage.getItem('modkeybind_' + mod.name);
+    if (
+      bindKey &&
+      e.key.toUpperCase() === bindKey
+    ) {
+      e.preventDefault();
+      try { mod.fn(); } catch {}
+    }
+  }
+});
+
+createMenu();
+
 })();
-
