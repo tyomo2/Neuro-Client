@@ -3945,7 +3945,7 @@ function createMenu() {
         dropdownMenu.innerHTML = `
   <div>
     <label>
-      キー割り当て: 
+      Key bind: 
       <input type="text" maxlength="1" style="width:2em; text-transform:uppercase;" />
     </label>
     <div class="keybind-note"></div>
@@ -4105,3 +4105,4 @@ document.addEventListener('keydown', e => {
 createMenu();
 
 })();
+
