@@ -5,7 +5,7 @@
 // @version     0.1.0
 // @author      Developed by skidmus, wang, simple/5eqnMVZDg1cezjZh, chatGPT, Arthur, ENTITY, and Tomo.
 // @description https://discord.gg/VN2kjB78
-//updateURL https://raw.githubusercontent.com/tyomo2/Neuro-Client/refs/heads/main/Neuro%20Client.js
+// @updateURL https://raw.githubusercontent.com/tyomo2/Neuro-Client/refs/heads/main/Neuro%20Client.js
 // ==/UserScript==
 //
 // ALWAYS USE ALTS
@@ -4075,3 +4075,4 @@ for (const x of document.querySelectorAll('.arraylist-box, .watermark'))
     // ---- 初期化
     createMenu();
 })();
+
