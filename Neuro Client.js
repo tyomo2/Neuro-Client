@@ -1341,7 +1341,7 @@ function startTargetFinder() {
         }
 
         // Final visibility and distance logic
-        if (killAuraEnabled && closestId != null && minDist < 4) { //16 for now
+        if (killAuraEnabled && closestId != null && minDist < 64) { //16 for now
             newBox[__nullKey] = true;
             targetEntityDistance = Math.floor(Math.sqrt(minDist));
         } else {
@@ -4105,4 +4105,5 @@ document.addEventListener('keydown', e => {
 createMenu();
 
 })();
+
 
